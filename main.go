@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 	"trocup-transaction/config"
-	"trocup-transaction/handlers"
-	"trocup-transaction/repository"
+	"trocup-transaction/routes"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -24,14 +24,17 @@ func main() {
 
     app := fiber.New()
 
+    // CORS activation for all routes
+    app.Use(cors.New(cors.Config{
+        AllowOrigins: "*", // Enable access from all domains
+        AllowMethods: "GET,POST,HEAD,PUT,DELETE,OPTIONS", // Allowed HTTP methods
+    }))
+
     // Initialize MongoDB
     config.InitMongo()
 
-    // Initialize the transaction repository
-    repository.InitTransactionRepository()
-
     // Set up routes
-    handlers.SetupRoutes(app)
+    routes.TransactionRoutes(app)
 
     // Get port from environment variable
     port := os.Getenv("PORT")
