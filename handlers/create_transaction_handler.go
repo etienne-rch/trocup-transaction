@@ -17,13 +17,22 @@ func CreateTransaction(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Validation des données
+	// Récupérer l'utilisateur authentifié
+	clerkUserId := c.Locals("clerkUserId").(string)
+
+	// Vérifier si l'utilisateur est bien le vendeur (expéditeur)
+	if transaction.Sender != clerkUserId {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You do not have permission to create this transaction"})
+	}
+
+	// Validation de la transaction
 	if err := validate.Struct(transaction); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	// Créer la transaction dans la base de données
 	if err := services.CreateTransaction(&transaction); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create transaction"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(transaction)

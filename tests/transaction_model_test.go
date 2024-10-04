@@ -9,10 +9,7 @@ import (
 )
 
 func TestTransaction(t *testing.T) {
-	id, err := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
-	if err != nil {
-		t.Fatalf("failed to create ObjectID: %v", err)
-	}
+	id := "507f1f77bcf86cd799439011" // Utilise un string pour Clerk's user IDs
 
 	now := time.Now()
 
@@ -26,25 +23,20 @@ func TestTransaction(t *testing.T) {
 	}
 
 	transaction := models.Transaction{
-		ID:       id,
+		ID:       primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
 		Version:  1,
-		Receiver: id,
-		Article:  id,
-		Sender:   id,
+		Receiver: id, // Utilise un string pour Receiver
+		Article:  primitive.NewObjectID(),
+		Sender:   id, // Utilise un string pour Sender
 		Delivery: delivery,
 	}
 
-	if transaction.ID != id {
-		t.Errorf("expected ID to be %v, got %v", id, transaction.ID)
-	}
+	// Tests pour vérifier les champs de la transaction
 	if transaction.Version != 1 {
 		t.Errorf("expected Version to be 1, got %d", transaction.Version)
 	}
 	if transaction.Receiver != id {
 		t.Errorf("expected Receiver to be %v, got %v", id, transaction.Receiver)
-	}
-	if transaction.Article != id {
-		t.Errorf("expected Article to be %v, got %v", id, transaction.Article)
 	}
 	if transaction.Sender != id {
 		t.Errorf("expected Sender to be %v, got %v", id, transaction.Sender)

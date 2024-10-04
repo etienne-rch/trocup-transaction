@@ -20,15 +20,14 @@ import (
 func TestUpdateTransaction(t *testing.T) {
 	app := fiber.New()
 
-	app.Put("/transactions/:id", handlers.UpdateTransaction)
-
+	// Créer une transaction pour les tests
 	id := primitive.NewObjectID()
 	transaction := models.Transaction{
 		ID:       id,
 		Version:  1,
-		Receiver: primitive.NewObjectID(),
+		Receiver: "receiverUserId456", // Utilise un string pour Receiver
 		Article:  primitive.NewObjectID(),
-		Sender:   primitive.NewObjectID(),
+		Sender:   "senderUserId123", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
@@ -37,14 +36,34 @@ func TestUpdateTransaction(t *testing.T) {
 			QrCodeUrl:     "http://example.com/qrcode",
 		},
 	}
-	_ = repository.CreateTransaction(&transaction)
 
+	// Créer la transaction dans la base de données
+	err := repository.CreateTransaction(&transaction)
+	if err != nil {
+		t.Fatalf("Failed to create transaction: %v", err)
+	}
+
+	// Simuler l'ajout du middleware ClerkAuthMiddleware
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals("clerkUserId", transaction.Sender) // Simuler l'utilisateur connecté avec un string (Sender)
+		return c.Next()
+	})
+
+	// Ajouter le handler de mise à jour de transaction
+	app.Put("/transactions/:id", handlers.UpdateTransaction)
+
+	// Modifier la transaction pour la mise à jour
 	transaction.Delivery.Cost = 150
 	reqBody, _ := json.Marshal(transaction)
+
+	// Créer la requête PUT
 	req := httptest.NewRequest("PUT", "/transactions/"+id.Hex(), bytes.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
+
+	// Exécuter la requête PUT
 	resp, _ := app.Test(req)
 
+	// Vérifier le code de statut attendu
 	utils.AssertEqual(t, http.StatusOK, resp.StatusCode, "Expected status code to be 200 OK")
 
 	// Nettoyage après chaque test

@@ -17,16 +17,15 @@ import (
 
 func TestDeleteTransaction(t *testing.T) {
 	app := fiber.New()
-	
-	app.Delete("/transactions/:id", handlers.DeleteTransaction)
 
-	id := primitive.NewObjectID()
+	// Créer une transaction pour les tests
+	id := primitive.NewObjectID() // Générer un ObjectID pour la transaction (pour MongoDB)
 	transaction := models.Transaction{
 		ID:       id,
 		Version:  1,
-		Receiver: primitive.NewObjectID(),
-		Article:  primitive.NewObjectID(),
-		Sender:   primitive.NewObjectID(),
+		Receiver: "receiverUserId456",     // Utilise un string pour Receiver
+		Article:  primitive.NewObjectID(), // Article reste un ObjectID
+		Sender:   "testUserId123",         // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
@@ -35,11 +34,29 @@ func TestDeleteTransaction(t *testing.T) {
 			QrCodeUrl:     "http://example.com/qrcode",
 		},
 	}
-	_ = repository.CreateTransaction(&transaction)
 
+	// Créer la transaction dans la base de données
+	err := repository.CreateTransaction(&transaction)
+	if err != nil {
+		t.Fatalf("Failed to create transaction: %v", err)
+	}
+
+	// Simuler l'ajout du middleware ClerkAuthMiddleware
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals("clerkUserId", transaction.Sender) // Simuler l'utilisateur connecté en passant un string
+		return c.Next()
+	})
+
+	// Ajouter le handler de suppression de transaction
+	app.Delete("/transactions/:id", handlers.DeleteTransaction)
+
+	// Créer la requête DELETE
 	req := httptest.NewRequest("DELETE", "/transactions/"+id.Hex(), nil)
+
+	// Exécuter la requête DELETE
 	resp, _ := app.Test(req)
 
+	// Vérifier le code de statut attendu
 	utils.AssertEqual(t, http.StatusNoContent, resp.StatusCode, "Expected status code to be 204 No Content")
 
 	// Nettoyage après chaque test
