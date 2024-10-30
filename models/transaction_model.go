@@ -7,19 +7,19 @@ import (
 )
 
 type Delivery struct {
-    ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-    Type           string             `bson:"type" json:"type"`
-    PackageWeight  int                `bson:"packageWeight" json:"packageWeight"`
-    Sent           time.Time          `bson:"sent" json:"sent"`
-    Cost           int                `bson:"cost" json:"cost"`
-    QrCodeUrl      string             `bson:"qrCodeUrl" json:"qrCodeUrl"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Type          string             `bson:"type" json:"type" validate:"required,oneof=standard express"`
+	PackageWeight int                `bson:"packageWeight" json:"packageWeight" validate:"required,gt=0"`
+	Sent          time.Time          `bson:"sent,omitempty" json:"sent,omitempty"`
+	Cost          int                `bson:"cost" json:"cost" validate:"required,gt=0"`
+	QrCodeUrl     string             `bson:"qrCodeUrl,omitempty" json:"qrCodeUrl,omitempty"`
 }
 
 type Transaction struct {
-    ID         primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-    Version    int                `bson:"version" json:"version"`
-    Receiver   primitive.ObjectID `bson:"receiver" json:"receiver"`
-    Article    primitive.ObjectID `bson:"article" json:"article"`
-    Sender     primitive.ObjectID `bson:"sender" json:"sender"`
-    Delivery   Delivery           `bson:"delivery" json:"delivery"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Version  int                `bson:"version" json:"version" validate:"required,gt=0"`
+	Receiver string             `bson:"receiver" json:"receiver" validate:"required"`
+	Article  primitive.ObjectID `bson:"article" json:"article" validate:"required"`
+	Sender   string             `bson:"sender" json:"sender" validate:"required"`
+	Delivery Delivery           `bson:"delivery" json:"delivery" validate:"required"`
 }
