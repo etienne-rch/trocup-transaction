@@ -15,11 +15,21 @@ type Delivery struct {
     QrCodeUrl      string             `bson:"qrCodeUrl" json:"qrCodeUrl"`
 }
 
+// type Transaction struct {
+//     ID         primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+//     Version    int                `bson:"version" json:"version"`
+//     Receiver   primitive.ObjectID `bson:"receiver" json:"receiver"`
+//     Article    primitive.ObjectID `bson:"article" json:"article"`
+//     Sender     primitive.ObjectID `bson:"sender" json:"sender"`
+//     Delivery   Delivery           `bson:"delivery" json:"delivery"`
+// }
+
 type Transaction struct {
     ID         primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
     Version    int                `bson:"version" json:"version"`
     Receiver   primitive.ObjectID `bson:"receiver" json:"receiver"`
     Article    primitive.ObjectID `bson:"article" json:"article"`
-    Sender     primitive.ObjectID `bson:"sender" json:"sender"`
+    Sender   primitive.ObjectID `bson:"sender_id" json:"sender_id"`  // Ajout de SenderID
+    // Amount     float64            `bson:"amount" json:"amount"`
     Delivery   Delivery           `bson:"delivery" json:"delivery"`
 }

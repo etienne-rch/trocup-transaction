@@ -68,3 +68,4 @@ func TestTransaction(t *testing.T) {
 		t.Errorf("expected QrCodeUrl to be 'https://example.com/qrcode', got %s", transaction.Delivery.QrCodeUrl)
 	}
 }
+
