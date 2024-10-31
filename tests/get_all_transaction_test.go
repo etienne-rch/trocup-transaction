@@ -23,9 +23,9 @@ func TestGetAllTransactions(t *testing.T) {
 
 	// Créer deux transactions avec des strings pour Sender et Receiver
 	transaction1 := models.Transaction{
-		Receiver: "receiverUserId456", // Utilise un string pour Receiver
-		Article:  primitive.NewObjectID(),
-		Sender:   "senderUserId123", // Utilise un string pour Sender
+		Receiver:      "receiverUserId456", // Utilise un string pour Receiver
+		SenderArticle: primitive.NewObjectID(),
+		Sender:        "senderUserId123", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
@@ -35,9 +35,9 @@ func TestGetAllTransactions(t *testing.T) {
 		},
 	}
 	transaction2 := models.Transaction{
-		Receiver: "receiverUserId789", // Utilise un string pour Receiver
-		Article:  primitive.NewObjectID(),
-		Sender:   "senderUserId456", // Utilise un string pour Sender
+		Receiver:      "receiverUserId789", // Utilise un string pour Receiver
+		SenderArticle: primitive.NewObjectID(),
+		Sender:        "senderUserId456", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "express",
 			PackageWeight: 1,

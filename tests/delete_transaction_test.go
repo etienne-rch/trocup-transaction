@@ -21,10 +21,10 @@ func TestDeleteTransaction(t *testing.T) {
 	// Créer une transaction pour les tests
 	id := primitive.NewObjectID() // Générer un ObjectID pour la transaction (pour MongoDB)
 	transaction := models.Transaction{
-		ID:       id,
-		Receiver: "receiverUserId456",     // Utilise un string pour Receiver
-		Article:  primitive.NewObjectID(), // Article reste un ObjectID
-		Sender:   "testUserId123",         // Utilise un string pour Sender
+		ID:            id,
+		Receiver:      "receiverUserId456",     // Utilise un string pour Receiver
+		SenderArticle: primitive.NewObjectID(), // Article reste un ObjectID
+		Sender:        "testUserId123",         // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,

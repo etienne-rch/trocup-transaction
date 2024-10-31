@@ -23,11 +23,11 @@ func TestTransaction(t *testing.T) {
 	}
 
 	transaction := models.Transaction{
-		ID:       primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
-		Receiver: id,                      // Utilise un string pour Receiver
-		Article:  primitive.NewObjectID(),
-		Sender:   id, // Utilise un string pour Sender
-		Delivery: delivery,
+		ID:            primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
+		Receiver:      id,                      // Utilise un string pour Receiver
+		SenderArticle: primitive.NewObjectID(),
+		Sender:        id, // Utilise un string pour Sender
+		Delivery:      delivery,
 	}
 
 	// Tests pour vérifier les champs de la transaction

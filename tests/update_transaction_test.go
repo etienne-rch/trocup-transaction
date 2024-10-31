@@ -23,10 +23,10 @@ func TestUpdateTransaction(t *testing.T) {
 	// Créer une transaction pour les tests
 	id := primitive.NewObjectID()
 	transaction := models.Transaction{
-		ID:       id,
-		Receiver: "receiverUserId456", // Utilise un string pour Receiver
-		Article:  primitive.NewObjectID(),
-		Sender:   "senderUserId123", // Utilise un string pour Sender
+		ID:            id,
+		Receiver:      "receiverUserId456", // Utilise un string pour Receiver
+		SenderArticle: primitive.NewObjectID(),
+		Sender:        "senderUserId123", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
