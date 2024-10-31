@@ -69,7 +69,6 @@ func TestCreateTransaction(t *testing.T) {
 
 	// Créer une transaction valide avec le même Sender que le testUser
 	transaction := models.Transaction{
-		Version:  1,
 		Receiver: "receiverUserId456",     // Utilise un string pour le Receiver
 		Article:  primitive.NewObjectID(), // Article reste un ObjectID
 		Sender:   testUser.ID,             // Utilise l'ID du testUser (string)

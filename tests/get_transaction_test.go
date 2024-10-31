@@ -22,7 +22,6 @@ func TestGetTransaction(t *testing.T) {
 	id := primitive.NewObjectID() // ID de la transaction reste un ObjectID pour MongoDB
 	transaction := models.Transaction{
 		ID:       id,
-		Version:  1,
 		Receiver: "receiverUserId456",     // Utilise un string pour Receiver
 		Article:  primitive.NewObjectID(), // Article reste un ObjectID
 		Sender:   "senderUserId123",       // Utilise un string pour Sender

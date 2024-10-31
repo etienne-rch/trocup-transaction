@@ -17,7 +17,6 @@ type Delivery struct {
 
 type Transaction struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Version  int                `bson:"version" json:"version" validate:"required,gt=0"`
 	Receiver string             `bson:"receiver" json:"receiver" validate:"required"`
 	Article  primitive.ObjectID `bson:"article" json:"article" validate:"required"`
 	Sender   string             `bson:"sender" json:"sender" validate:"required"`

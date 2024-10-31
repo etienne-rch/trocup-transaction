@@ -16,7 +16,6 @@ func UpdateTransaction(id primitive.ObjectID, updatedTransaction *models.Transac
 	}
 
 	// Mise à jour des champs modifiables
-	existingTransaction.Version = updatedTransaction.Version
 	existingTransaction.Receiver = updatedTransaction.Receiver
 	existingTransaction.Article = updatedTransaction.Article
 	existingTransaction.Sender = updatedTransaction.Sender

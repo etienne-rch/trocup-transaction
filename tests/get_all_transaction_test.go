@@ -23,7 +23,6 @@ func TestGetAllTransactions(t *testing.T) {
 
 	// Créer deux transactions avec des strings pour Sender et Receiver
 	transaction1 := models.Transaction{
-		Version:  1,
 		Receiver: "receiverUserId456", // Utilise un string pour Receiver
 		Article:  primitive.NewObjectID(),
 		Sender:   "senderUserId123", // Utilise un string pour Sender
@@ -36,7 +35,6 @@ func TestGetAllTransactions(t *testing.T) {
 		},
 	}
 	transaction2 := models.Transaction{
-		Version:  1,
 		Receiver: "receiverUserId789", // Utilise un string pour Receiver
 		Article:  primitive.NewObjectID(),
 		Sender:   "senderUserId456", // Utilise un string pour Sender
