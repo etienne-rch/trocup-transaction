@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"trocup-transaction/handlers"
 	"trocup-transaction/middleware"
 
@@ -22,4 +23,9 @@ func TransactionRoutes(app *fiber.App) {
 	api.Get("/transactions", handlers.GetAllTransactions)
 	api.Put("/transactions/:id", handlers.UpdateTransaction)
 	api.Delete("/transactions/:id", handlers.DeleteTransaction)
+
+	// Ajouter une route catch-all pour le débogage
+	app.Use(func(c *fiber.Ctx) error {
+		return c.Status(404).SendString(fmt.Sprintf("Route not found: %s", c.Path()))
+	})
 }
