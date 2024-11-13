@@ -35,5 +35,10 @@ func CreateTransaction(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create transaction"})
 	}
 
+	// Mettre à jour les données de l'utilisateur
+	if err := services.GetUserService().UpdateUserBalance(transaction.UserA, transaction.UserB); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user"})
+	}
+
 	return c.Status(http.StatusCreated).JSON(transaction)
 }

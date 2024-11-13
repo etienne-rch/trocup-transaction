@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+
+  users:
+    build:
+      context: ./trocup-user
+    image: trocup-user:latest
+    deploy:
+      replicas: 2
+    ports:
+      - 5001:5001
+
+  articles:
+    build:
+      context: ./trocup-article
+    image: trocup-article:latest
+    deploy:
+      replicas: 2
+    ports:
+      - 5002:5002
+
+  transactions:
+    build:
+      context: ./trocup-transaction
+    image: trocup-transaction:latest
+    deploy:
+      replicas: 2
+    ports:
+      - 5003:5003
+
+  messages:
+    build:
+      context: ./trocup-message
+    image: trocup-message:latest
+    deploy:
+      replicas: 2
+    ports:
+      - 5004:5004
+
+networks:
+  default:
+    name: trocup-network
