@@ -16,9 +16,11 @@ type Delivery struct {
 }
 
 type Transaction struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Receiver      string             `bson:"receiver" json:"receiver" validate:"required"`
-	SenderArticle primitive.ObjectID `bson:"senderArticle" json:"senderArticle" validate:"required"`
-	Sender        string             `bson:"sender" json:"sender" validate:"required"`
-	Delivery      Delivery           `bson:"delivery" json:"delivery"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	UserA     string             `bson:"userA" json:"userA" validate:"required"`
+	ArticleA  primitive.ObjectID `bson:"articleA" json:"articleA" validate:"required"`
+	UserB     string             `bson:"userB" json:"userB" validate:"required"`
+	ArticleB  primitive.ObjectID `bson:"articleB,omitempty" json:"articleB,omitempty"`
+	Delivery  Delivery           `bson:"delivery" json:"delivery"`
+	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
 }

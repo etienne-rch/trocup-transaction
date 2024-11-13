@@ -23,19 +23,19 @@ func TestTransaction(t *testing.T) {
 	}
 
 	transaction := models.Transaction{
-		ID:            primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
-		Receiver:      id,                      // Utilise un string pour Receiver
-		SenderArticle: primitive.NewObjectID(),
-		Sender:        id, // Utilise un string pour Sender
-		Delivery:      delivery,
+		ID:       primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
+		UserB:    id,                      // Utilise un string pour UserB
+		ArticleA: primitive.NewObjectID(),
+		UserA:    id, // Utilise un string pour UserA
+		Delivery: delivery,
 	}
 
 	// Tests pour vérifier les champs de la transaction
-	if transaction.Receiver != id {
-		t.Errorf("expected Receiver to be %v, got %v", id, transaction.Receiver)
+	if transaction.UserB != id {
+		t.Errorf("expected UserB to be %v, got %v", id, transaction.UserB)
 	}
-	if transaction.Sender != id {
-		t.Errorf("expected Sender to be %v, got %v", id, transaction.Sender)
+	if transaction.UserA != id {
+		t.Errorf("expected UserA to be %v, got %v", id, transaction.UserA)
 	}
 	if transaction.Delivery.ID != delivery.ID {
 		t.Errorf("expected Delivery ID to be %v, got %v", delivery.ID, transaction.Delivery.ID)

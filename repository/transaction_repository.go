@@ -47,3 +47,35 @@ func DeleteTransaction(id primitive.ObjectID) error {
 	_, err := config.TransactionCollection.DeleteOne(context.TODO(), bson.M{"_id": id})
 	return err
 }
+
+func GetAllTransactionsByUserID(userID string) ([]*models.Transaction, error) {
+	var transactions []*models.Transaction
+
+	// Rechercher les transactions où l'utilisateur est sender ou receiver
+	filter := bson.M{
+		"$or": []bson.M{
+			{"userA": userID},
+			{"userB": userID},
+		},
+	}
+
+	cursor, err := config.TransactionCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		var transaction models.Transaction
+		if err := cursor.Decode(&transaction); err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, &transaction)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}

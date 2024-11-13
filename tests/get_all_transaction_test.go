@@ -21,11 +21,11 @@ func TestGetAllTransactions(t *testing.T) {
 	// Ajouter le handler pour récupérer toutes les transactions
 	app.Get("/transactions", handlers.GetAllTransactions)
 
-	// Créer deux transactions avec des strings pour Sender et Receiver
+	// Créer deux transactions avec des strings pour UserA et UserB
 	transaction1 := models.Transaction{
-		Receiver:      "receiverUserId456", // Utilise un string pour Receiver
-		SenderArticle: primitive.NewObjectID(),
-		Sender:        "senderUserId123", // Utilise un string pour Sender
+		UserB:    "receiverUserId456", // Utilise un string pour UserB
+		ArticleA: primitive.NewObjectID(),
+		UserA:    "senderUserId123", // Utilise un string pour UserA
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
@@ -35,9 +35,9 @@ func TestGetAllTransactions(t *testing.T) {
 		},
 	}
 	transaction2 := models.Transaction{
-		Receiver:      "receiverUserId789", // Utilise un string pour Receiver
-		SenderArticle: primitive.NewObjectID(),
-		Sender:        "senderUserId456", // Utilise un string pour Sender
+		UserB:    "receiverUserId789", // Utilise un string pour UserB
+		ArticleA: primitive.NewObjectID(),
+		UserA:    "senderUserId456", // Utilise un string pour UserA
 		Delivery: models.Delivery{
 			Type:          "express",
 			PackageWeight: 1,

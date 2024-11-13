@@ -24,7 +24,7 @@ func UpdateTransaction(c *fiber.Ctx) error {
 
 	// Vérifier si l'utilisateur est impliqué dans la transaction
 	clerkUserId := c.Locals("clerkUserId").(string)
-	if transaction.Sender != clerkUserId && transaction.Receiver != clerkUserId {
+	if transaction.UserA != clerkUserId && transaction.UserB != clerkUserId {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You do not have access to update this transaction"})
 	}
 
