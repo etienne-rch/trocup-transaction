@@ -23,9 +23,11 @@ func main() {
 	_ = godotenv.Load()
 
 	app := fiber.New(fiber.Config{
+		Network: "tcp",
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
+		AppName: "Trocup Transaction Microservice",
 	})
 
 	// CORS activation for all routes
