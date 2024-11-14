@@ -22,6 +22,6 @@ type Transaction struct {
 	ArticleA      primitive.ObjectID `bson:"articleA" json:"articleA" validate:"required"`
 	UserB         string             `bson:"userB" json:"userB" validate:"required"`
 	ArticleB      primitive.ObjectID `bson:"articleB,omitempty" json:"articleB,omitempty"`
-	Delivery      Delivery           `bson:"delivery" json:"delivery"`
+	Delivery      Delivery           `bson:"delivery" json:"delivery,omitempty"`
 	CreatedAt     time.Time          `bson:"createdAt" json:"createdAt"`
 }

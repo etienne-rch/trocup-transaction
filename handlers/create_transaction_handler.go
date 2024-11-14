@@ -2,42 +2,110 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"time"
 	"trocup-transaction/models"
 	"trocup-transaction/services"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate = validator.New()
 
+// Create a struct to match the exact request body
+type TransactionRequest struct {
+	UserA         string             `json:"userA" validate:"required"`
+	ArticleA      primitive.ObjectID `json:"articleA" validate:"required"`
+	ArticlePriceA float64           `json:"articlePriceA,omitempty"`
+	UserB         string             `json:"userB" validate:"required"`
+	ArticleB      primitive.ObjectID `json:"articleB,omitempty"`
+	ArticlePriceB float64           `json:"articlePriceB" validate:"required"`
+	Delivery      models.Delivery    `json:"delivery"`
+	ClerkToken    string            `json:"-"` // The JWT token, "-" means it won't be included in JSON
+}
+
 func CreateTransaction(c *fiber.Ctx) error {
-	var transaction models.Transaction
-	if err := c.BodyParser(&transaction); err != nil {
+	var request TransactionRequest
+	if err := c.BodyParser(&request); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Récupérer l'utilisateur authentifié
-	clerkUserId := c.Locals("clerkUserId").(string)
-
-	// Vérifier si l'utilisateur est bien le vendeur (expéditeur)
-	if transaction.UserA != clerkUserId {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You do not have permission to create this transaction"})
+	// Get the JWT token from the request header
+	token := c.Get("Authorization")
+	if token == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "No authorization token provided",
+		})
 	}
 
-	// Validation de la transaction
-	if err := validate.Struct(transaction); err != nil {
+	request.ClerkToken = token
+
+	userServiceBaseURL := os.Getenv("USER_SERVICE_URL")
+
+	if userServiceBaseURL == "" {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "User service base URL not set"})
+	}
+
+	// Perform a health check on the user microservice
+	userServiceHealth := services.GetUserService(userServiceBaseURL).HealthCheck()
+	if !userServiceHealth {
+		return c.Status(http.StatusServiceUnavailable).JSON(fiber.Map{"error": "User microservice is unavailable"})
+	}
+
+	if err := validate.Struct(request); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	// Créer la transaction dans la base de données
+	// Create transaction model from request
+	transaction := models.Transaction{
+		UserA:     request.UserA,
+		UserB:     request.UserB,
+		ArticleB:  request.ArticleB,
+		Delivery:  request.Delivery,
+		CreatedAt: time.Now(),
+	}
+
+	// Only set ArticleA if it's not zero
+	if !request.ArticleA.IsZero() {
+		transaction.ArticleA = request.ArticleA
+	}
+
+
+	// Save to database
 	if err := services.CreateTransaction(&transaction); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create transaction"})
 	}
 
-	// Mettre à jour les données de l'utilisateur
-	if err := services.GetUserService().UpdateUserBalance(transaction.UserA, transaction.UserB); err != nil {
+
+	serviceRequest := services.TransactionForUserRequest{
+		UserA:         request.UserA,
+		UserB:         request.UserB,
+		ArticlePriceA: request.ArticlePriceA,
+		ArticlePriceB: request.ArticlePriceB,
+		ClerkToken:    request.ClerkToken,
+	}
+
+	// Update users data on the user microservice
+	if err := services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user"})
+	}
+
+	// Update article state on the article microservice
+	articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
+	if articleServiceBaseURL == "" {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
+	}
+
+	articleIDs := []string{request.ArticleA.String(), request.ArticleB.String()}
+
+	if err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
+		articleIDs,
+		services.ArticleStatusUnavailable,
+		request.ClerkToken,
+	); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update article"})
 	}
 
 	return c.Status(http.StatusCreated).JSON(transaction)
