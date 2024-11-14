@@ -15,7 +15,6 @@ func TransactionRoutes(app *fiber.App) {
 
 	public.Get("/health", handlers.HealthCheck)
 
-
 	// Routes protégées : accessibles uniquement avec authentification
 	protected := app.Group("/api/protected", middleware.ClerkAuthMiddleware)
 
@@ -24,6 +23,7 @@ func TransactionRoutes(app *fiber.App) {
 	protected.Get("/transactions", handlers.GetAllTransactions)
 	protected.Put("/transactions/:id", handlers.UpdateTransaction)
 	protected.Delete("/transactions/:id", handlers.DeleteTransaction)
+	protected.Get("/transactions/users/:id", handlers.GetAllTransactionsUser)
 
 	// Ajouter une route catch-all pour le débogage
 	app.Use(func(c *fiber.Ctx) error {

@@ -21,7 +21,7 @@ func CreateTransaction(c *fiber.Ctx) error {
 	clerkUserId := c.Locals("clerkUserId").(string)
 
 	// Vérifier si l'utilisateur est bien le vendeur (expéditeur)
-	if transaction.Sender != clerkUserId {
+	if transaction.UserA != clerkUserId {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You do not have permission to create this transaction"})
 	}
 

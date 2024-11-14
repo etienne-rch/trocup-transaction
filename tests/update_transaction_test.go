@@ -23,10 +23,10 @@ func TestUpdateTransaction(t *testing.T) {
 	// Créer une transaction pour les tests
 	id := primitive.NewObjectID()
 	transaction := models.Transaction{
-		ID:            id,
-		Receiver:      "receiverUserId456", // Utilise un string pour Receiver
-		SenderArticle: primitive.NewObjectID(),
-		Sender:        "senderUserId123", // Utilise un string pour Sender
+		ID:       id,
+		UserB:    "receiverUserId456", // Utilise un string pour UserB
+		ArticleA: primitive.NewObjectID(),
+		UserA:    "senderUserId123", // Utilise un string pour UserA
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
@@ -44,7 +44,7 @@ func TestUpdateTransaction(t *testing.T) {
 
 	// Simuler l'ajout du middleware ClerkAuthMiddleware
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("clerkUserId", transaction.Sender) // Simuler l'utilisateur connecté avec un string (Sender)
+		c.Locals("clerkUserId", transaction.UserA) // Simuler l'utilisateur connecté avec un string (UserA)
 		return c.Next()
 	})
 
