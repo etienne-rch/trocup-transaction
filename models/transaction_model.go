@@ -7,7 +7,7 @@ import (
 )
 
 type Delivery struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Type          string             `bson:"type" json:"type"`
 	PackageWeight int                `bson:"packageWeight" json:"packageWeight"`
 	SentAt        time.Time          `bson:"sentAt,omitempty" json:"sentAt,omitempty"`
@@ -17,7 +17,7 @@ type Delivery struct {
 }
 
 type Transaction struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	State         string             `bson:"state" json:"state"`
 	UserA         string             `bson:"userA" json:"userA" validate:"required"`
 	ArticleA      primitive.ObjectID `bson:"articleA" json:"articleA" validate:"required"`
