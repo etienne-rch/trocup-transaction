@@ -79,3 +79,18 @@ func GetAllTransactionsByUserID(userID string) ([]*models.Transaction, error) {
 
 	return transactions, nil
 }
+
+func TransactionExists(userA, userB string, articleB primitive.ObjectID, articleA primitive.ObjectID) (bool, error) {
+	filter := bson.M{
+		"userA": userA,
+		"userB": userB,
+		"articleB": articleB,
+	}
+
+	if !articleA.IsZero() {
+		filter["articleA"] = articleA
+	}
+
+	count, err := config.TransactionCollection.CountDocuments(context.TODO(), filter)
+	return count > 0, err
+}

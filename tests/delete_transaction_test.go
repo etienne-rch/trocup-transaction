@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 	"trocup-transaction/config"
 	"trocup-transaction/handlers"
 	"trocup-transaction/models"
@@ -21,14 +20,13 @@ func TestDeleteTransaction(t *testing.T) {
 	// Créer une transaction pour les tests
 	id := primitive.NewObjectID() // Générer un ObjectID pour la transaction (pour MongoDB)
 	transaction := models.Transaction{
-		ID:       id,
-		UserB:    "receiverUserId456",     // Utilise un string pour UserB
-		ArticleA: primitive.NewObjectID(), // Article reste un ObjectID
-		UserA:    "testUserId123",         // Utilise un string pour UserA
+		ID:            id,
+		UserA:      "receiverUserId456",     // Utilise un string pour Receiver
+		ArticleB:  primitive.NewObjectID(), // Article reste un ObjectID
+		UserB:        "testUserId123",         // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
-			Sent:          time.Now(),
 			Cost:          100,
 			QrCodeUrl:     "http://example.com/qrcode",
 		},
@@ -42,7 +40,7 @@ func TestDeleteTransaction(t *testing.T) {
 
 	// Simuler l'ajout du middleware ClerkAuthMiddleware
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("clerkUserId", transaction.UserA) // Simuler l'utilisateur connecté en passant un string
+		c.Locals("clerkUserId", transaction.UserB) // Simuler l'utilisateur connecté en passant un string
 		return c.Next()
 	})
 

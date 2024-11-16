@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -14,16 +16,21 @@ import (
 
 var validate = validator.New()
 
-// Create a struct to match the exact request body
+
+// Article represents the article information in the request
+type Article struct {
+	ID    string  `json:"id"`
+	Price float64 `json:"price"`
+}
+
+// TransactionRequest represents the incoming request body
 type TransactionRequest struct {
-	UserA         string             `json:"userA" validate:"required"`
-	ArticleA      primitive.ObjectID `json:"articleA" validate:"required"`
-	ArticlePriceA float64           `json:"articlePriceA,omitempty"`
-	UserB         string             `json:"userB" validate:"required"`
-	ArticleB      primitive.ObjectID `json:"articleB,omitempty"`
-	ArticlePriceB float64           `json:"articlePriceB" validate:"required"`
-	Delivery      models.Delivery    `json:"delivery"`
-	ClerkToken    string            `json:"-"` // The JWT token, "-" means it won't be included in JSON
+	UserA    string    `json:"userA"`
+	UserB    string    `json:"userB"`
+	ArticleB Article `json:"articleB"`
+	ArticleA Article `json:"articleA,omitempty"`
+	State    string  `json:"state"`
+	Delivery models.Delivery `json:"delivery,omitempty"`
 }
 
 func CreateTransaction(c *fiber.Ctx) error {
@@ -32,15 +39,11 @@ func CreateTransaction(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Get the JWT token from the request header
-	token := c.Get("Authorization")
-	if token == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "No authorization token provided",
-		})
-	}
+	
 
-	request.ClerkToken = token
+	log.Printf("Request Body: %+v\n", request)
+	
+	token := c.Get("Authorization")
 
 	userServiceBaseURL := os.Getenv("USER_SERVICE_URL")
 
@@ -59,21 +62,50 @@ func CreateTransaction(c *fiber.Ctx) error {
 	}
 
 	// Create transaction model from request
+	articleBID, err := primitive.ObjectIDFromHex(request.ArticleB.ID)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ArticleB ID format"})
+	}
+
+	// Check for existing transaction
+	var articleAID primitive.ObjectID
+	if request.ArticleA.ID != "" {
+		articleAID, err = primitive.ObjectIDFromHex(request.ArticleA.ID)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ArticleA ID format"})
+		}
+	}
+
+	exists, err := services.CheckTransactionExists(request.UserA, request.UserB, articleBID, articleAID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to check for existing transaction"})
+	}
+	if exists {
+		return c.Status(http.StatusConflict).JSON(fiber.Map{"error": "Transaction already exists"})
+	}
+
+	// Continue with creating the transaction...
 	transaction := models.Transaction{
+		State:     request.State,
 		UserA:     request.UserA,
 		UserB:     request.UserB,
-		ArticleB:  request.ArticleB,
+		ArticleB:  articleBID,
 		Delivery:  request.Delivery,
 		CreatedAt: time.Now(),
 	}
 
-	// Only set ArticleA if it's not zero
-	if !request.ArticleA.IsZero() {
-		transaction.ArticleA = request.ArticleA
+	// Only set ArticleA if it's not empty - this is for 1To1 transactions
+	if request.ArticleA.ID != "" {
+		transaction.ArticleA = articleAID
 	}
 
+	// Using fmt.Printf for basic logging
+	fmt.Printf("Request Body: %+v\n", request)
 
-	// Save to database
+	// Or using log package for better logging
+	log.Printf("Request Body: %+v\n", request)
+
+	// Save to transaction database
 	if err := services.CreateTransaction(&transaction); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create transaction"})
 	}
@@ -82,30 +114,37 @@ func CreateTransaction(c *fiber.Ctx) error {
 	serviceRequest := services.TransactionForUserRequest{
 		UserA:         request.UserA,
 		UserB:         request.UserB,
-		ArticlePriceA: request.ArticlePriceA,
-		ArticlePriceB: request.ArticlePriceB,
-		ClerkToken:    request.ClerkToken,
+		ArticlePriceA: request.ArticleA.Price,
+		ArticlePriceB: request.ArticleB.Price,
+		ClerkToken:    token,
 	}
 
 	// Update users data on the user microservice
-	if err := services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest); err != nil {
+	if request.State == "ACCEPTED" {
+		if err := services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user"})
+		}
 	}
 
-	// Update article state on the article microservice
+
+	// Update article state on the article microservice - only if the transaction is a 1To1 and pending OR if the transaction is a 1ToM and accepted
 	articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
-	if articleServiceBaseURL == "" {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
-	}
 
-	articleIDs := []string{request.ArticleA.String(), request.ArticleB.String()}
+	if request.State == "ACCEPTED" || (request.State == "PENDING" && request.ArticleA.ID != "") {
+		if articleServiceBaseURL == "" {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
+		}
+	
 
-	if err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
-		articleIDs,
-		services.ArticleStatusUnavailable,
-		request.ClerkToken,
-	); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update article"})
+		articleIDs := []string{request.ArticleA.ID, request.ArticleB.ID}
+
+		if err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
+			articleIDs,
+			services.ArticleStatusUnavailable,
+			token,
+		); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update article"})
+		}
 	}
 
 	return c.Status(http.StatusCreated).JSON(transaction)

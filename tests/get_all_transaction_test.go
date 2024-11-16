@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 	"trocup-transaction/config"
 	"trocup-transaction/handlers"
 	"trocup-transaction/models"
@@ -23,25 +22,23 @@ func TestGetAllTransactions(t *testing.T) {
 
 	// Créer deux transactions avec des strings pour UserA et UserB
 	transaction1 := models.Transaction{
-		UserB:    "receiverUserId456", // Utilise un string pour UserB
-		ArticleA: primitive.NewObjectID(),
-		UserA:    "senderUserId123", // Utilise un string pour UserA
+		UserA:      "receiverUserId456", // Utilise un string pour Receiver
+		ArticleB:  primitive.NewObjectID(),
+		UserB:     "senderUserId123", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "standard",
 			PackageWeight: 2,
-			Sent:          time.Now(),
 			Cost:          100,
 			QrCodeUrl:     "http://example.com/qrcode",
 		},
 	}
 	transaction2 := models.Transaction{
-		UserB:    "receiverUserId789", // Utilise un string pour UserB
-		ArticleA: primitive.NewObjectID(),
-		UserA:    "senderUserId456", // Utilise un string pour UserA
+		UserA:      "receiverUserId789", // Utilise un string pour Receiver
+		ArticleB:  primitive.NewObjectID(),
+		UserB:     "senderUserId456", // Utilise un string pour Sender
 		Delivery: models.Delivery{
 			Type:          "express",
 			PackageWeight: 1,
-			Sent:          time.Now(),
 			Cost:          200,
 			QrCodeUrl:     "http://example.com/qrcode2",
 		},

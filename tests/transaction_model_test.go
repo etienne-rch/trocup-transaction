@@ -2,7 +2,6 @@ package tests
 
 import (
 	"testing"
-	"time"
 	"trocup-transaction/models"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,31 +10,28 @@ import (
 func TestTransaction(t *testing.T) {
 	id := "507f1f77bcf86cd799439011" // Utilise un string pour Clerk's user IDs
 
-	now := time.Now()
-
 	delivery := models.Delivery{
 		ID:            primitive.NewObjectID(),
 		Type:          "standard",
 		PackageWeight: 1000,
-		Sent:          now,
 		Cost:          10,
 		QrCodeUrl:     "https://example.com/qrcode",
 	}
 
 	transaction := models.Transaction{
-		ID:       primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
-		UserB:    id,                      // Utilise un string pour UserB
-		ArticleA: primitive.NewObjectID(),
-		UserA:    id, // Utilise un string pour UserA
-		Delivery: delivery,
+		ID:            primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
+		UserA:      id,                      // Utilise un string pour Receiver
+		ArticleB:  primitive.NewObjectID(),
+		UserB:     id, // Utilise un string pour Sender
+		Delivery:  delivery,
 	}
 
 	// Tests pour vérifier les champs de la transaction
-	if transaction.UserB != id {
-		t.Errorf("expected UserB to be %v, got %v", id, transaction.UserB)
-	}
 	if transaction.UserA != id {
 		t.Errorf("expected UserA to be %v, got %v", id, transaction.UserA)
+	}
+	if transaction.UserB != id {
+		t.Errorf("expected UserB to be %v, got %v", id, transaction.UserB)
 	}
 	if transaction.Delivery.ID != delivery.ID {
 		t.Errorf("expected Delivery ID to be %v, got %v", delivery.ID, transaction.Delivery.ID)
@@ -45,9 +41,6 @@ func TestTransaction(t *testing.T) {
 	}
 	if transaction.Delivery.PackageWeight != 1000 {
 		t.Errorf("expected Package Weight to be 1000, got %d", transaction.Delivery.PackageWeight)
-	}
-	if !transaction.Delivery.Sent.Equal(now) {
-		t.Errorf("expected Sent to be %v, got %v", now, transaction.Delivery.Sent)
 	}
 	if transaction.Delivery.Cost != 10 {
 		t.Errorf("expected Cost to be 10, got %d", transaction.Delivery.Cost)
