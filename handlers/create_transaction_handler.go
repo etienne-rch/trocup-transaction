@@ -12,6 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	
 )
 
 var validate = validator.New()
@@ -30,7 +31,7 @@ type TransactionRequest struct {
 	ArticleB Article `json:"articleB"`
 	ArticleA Article `json:"articleA,omitempty"`
 	State    string  `json:"state"`
-	Delivery models.Delivery `json:"delivery,omitempty"`
+	Address  models.Address  `json:"address,omitempty"`
 }
 
 func CreateTransaction(c *fiber.Ctx) error {
@@ -39,9 +40,8 @@ func CreateTransaction(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	
-
-	log.Printf("Request Body: %+v\n", request)
+	log.Printf("Request Body: UserA: %s, UserB: %s, ArticleA: {ID: %s, Price: %.2f}, ArticleB: {ID: %s, Price: %.2f}, State: %s, Address: %s\n",
+		request.UserA, request.UserB, request.ArticleA.ID, request.ArticleA.Price, request.ArticleB.ID, request.ArticleB.Price, request.State, request.Address)
 	
 	token := c.Get("Authorization")
 
@@ -90,9 +90,13 @@ func CreateTransaction(c *fiber.Ctx) error {
 		UserA:     request.UserA,
 		UserB:     request.UserB,
 		ArticleB:  articleBID,
-		Delivery:  request.Delivery,
+		Delivery: models.Delivery{
+			Address: request.Address,
+		},
 		CreatedAt: time.Now(),
 	}
+
+	
 
 	// Only set ArticleA if it's not empty - this is for 1To1 transactions
 	if request.ArticleA.ID != "" {
