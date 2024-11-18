@@ -90,16 +90,22 @@ func CreateTransaction(c *fiber.Ctx) error {
 		UserA:     request.UserA,
 		UserB:     request.UserB,
 		ArticleB:  articleBID,
-		Delivery: models.Delivery{
-			Address: request.Address,
-		},
 		CreatedAt: time.Now(),
 	}
 
-	
+	// Check if address has any meaningful data
+	if request.Address.Street != "" || request.Address.City != "" || request.Address.Label != "" {
+		transaction.Delivery = &models.Delivery{
+			Address: request.Address,
+		}
+	}
 
-	// Only set ArticleA if it's not empty - this is for 1To1 transactions
+	// Only set ArticleA if it's provided
 	if request.ArticleA.ID != "" {
+		articleAID, err := primitive.ObjectIDFromHex(request.ArticleA.ID)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ArticleA ID format"})
+		}
 		transaction.ArticleA = articleAID
 	}
 

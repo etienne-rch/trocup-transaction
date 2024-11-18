@@ -39,10 +39,10 @@ type Delivery struct {
 type Transaction struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	State         string             `bson:"state" json:"state"`
-	UserA         string             `bson:"userA" json:"userA" validate:"required"`
-	ArticleA      primitive.ObjectID `bson:"articleA" json:"articleA" validate:"required"`
-	UserB         string             `bson:"userB" json:"userB" validate:"required"`
-	ArticleB      primitive.ObjectID `bson:"articleB,omitempty" json:"articleB,omitempty"`
-	Delivery      Delivery           `bson:"delivery" json:"delivery,omitempty"`
+	UserA         string             `bson:"userA" json:"userA"`
+	UserB         string             `bson:"userB" json:"userB"`
+	ArticleB      primitive.ObjectID `bson:"articleB" json:"articleB"`
+	ArticleA      primitive.ObjectID `bson:"articleA,omitempty" json:"articleA,omitempty"`
+	Delivery      *Delivery         `bson:"delivery,omitempty" json:"delivery,omitempty"`
 	CreatedAt     time.Time          `bson:"createdAt" json:"createdAt"`
 }
