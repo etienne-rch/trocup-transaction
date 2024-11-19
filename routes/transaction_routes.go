@@ -18,7 +18,8 @@ func TransactionRoutes(app *fiber.App) {
 	// Routes protégées : accessibles uniquement avec authentification
 	protected := app.Group("/api/protected", middleware.ClerkAuthMiddleware)
 
-	protected.Post("/transactions", handlers.CreateTransaction)
+	protected.Post("/transactions", handlers.CreatePreTransaction)
+	protected.Patch("/transactions/:id/complete", handlers.CompleteTransaction)
 	protected.Get("/transactions/:id", handlers.GetTransaction)
 	protected.Get("/transactions", handlers.GetAllTransactions)
 	protected.Put("/transactions/:id", handlers.UpdateTransaction)

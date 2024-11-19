@@ -5,22 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserService struct {
     baseURL string
 }
 
+type ArticleOwnership struct {
+    ArticleID string  `json:"articleId"`
+    OwnerID   string  `json:"ownerId"`
+    Price     float64 `json:"price"`
+}
+
 type TransactionForUserRequest struct {
-    UserA         string             `json:"userA"`
-    ArticleA      primitive.ObjectID `json:"articleA,omitempty"`
-    ArticlePriceA float64           `json:"articlePriceA,omitempty"`
-    UserB         string             `json:"userB"`
-    ArticleB      primitive.ObjectID `json:"articleB"`
-    ArticlePriceB float64           `json:"articlePriceB"`
-    ClerkToken    string            `json:"-"`
+    UserA          string  `json:"userA"`
+    UserB          string  `json:"userB"`
+    ArticleA       string  `json:"articleA,omitempty"`
+    ArticleB       string  `json:"articleB"`
+    ArticlePriceA  float64 `json:"articlePriceA,omitempty"`
+    ArticlePriceB  float64 `json:"articlePriceB"`
 }
 
 // GetUserService returns a new instance of UserService with the provided base URL
@@ -31,26 +34,13 @@ func GetUserService(baseURL string) *UserService {
 }
 
 // UpdateUsersData sends a request to update users data
-func (s *UserService) UpdateUsersData(request TransactionForUserRequest) error {
-    payload := map[string]interface{}{
-        "userA": request.UserA,
-        "userB": request.UserB,
-        "articleB": request.ArticleB,
-        "articlePriceB": request.ArticlePriceB,
-    }
-
-    // Only add articleA and articlePriceA if articleA exists
-    if !request.ArticleA.IsZero() {
-        payload["articleA"] = request.ArticleA
-        payload["articlePriceA"] = request.ArticlePriceA
-    }
-
-    jsonData, err := json.Marshal(payload)
+func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token string) error {
+    jsonData, err := json.Marshal(request)
     if err != nil {
         return fmt.Errorf("error marshaling payload: %v", err)
     }
 
-    resp, err := http.NewRequest(
+    req, err := http.NewRequest(
         http.MethodPatch,
         fmt.Sprintf("%susers/transactions", s.baseURL),
         bytes.NewBuffer(jsonData),
@@ -58,12 +48,13 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest) error {
     if err != nil {
         return fmt.Errorf("error creating request: %v", err)
     }
-    
-    resp.Header.Set("Content-Type", "application/json")
-    resp.Header.Set("Authorization", fmt.Sprintf("Bearer %s", request.ClerkToken))
-    
+
+    // Set headers
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
     client := &http.Client{}
-    response, err := client.Do(resp)
+    response, err := client.Do(req)
     if err != nil {
         return fmt.Errorf("error making request to user service: %v", err)
     }

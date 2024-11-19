@@ -6,7 +6,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type TransactionState string
 
+const (
+	TransactionStatePending   TransactionState = "PENDING"
+	TransactionStateAccepted  TransactionState = "ACCEPTED"
+	TransactionStateRefused   TransactionState = "REFUSED"
+	TransactionStateCancelled TransactionState = "CANCELLED"
+	TransactionStateCompleted TransactionState = "COMPLETED"
+)
+
+// Optional: Add validation method
+func (s TransactionState) IsValid() bool {
+	switch s {
+	case TransactionStatePending, TransactionStateAccepted, 
+		 TransactionStateRefused, TransactionStateCancelled:
+		return true
+	}
+	return false
+}
 
 type GeoPoints struct {
 	Type        string    `json:"type,omitempty" bson:"type,omitempty"`
@@ -38,7 +56,7 @@ type Delivery struct {
 
 type Transaction struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	State         string             `bson:"state" json:"state"`
+	State         TransactionState     `bson:"state" json:"state"`
 	UserA         string             `bson:"userA" json:"userA"`
 	UserB         string             `bson:"userB" json:"userB"`
 	ArticleB      primitive.ObjectID `bson:"articleB" json:"articleB"`

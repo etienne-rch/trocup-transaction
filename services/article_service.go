@@ -29,38 +29,47 @@ func GetArticleService(baseURL string) *ArticleService {
 	}
 }
 
-func (s *ArticleService) UpdateArticlesState(articleIDs []string, status ArticleStatus, clerkToken string) error {
-	url := fmt.Sprintf("%s/api/protected/articles/batch", s.baseURL)
+type ArticleUpdateResponse struct {
+	ID    string  `json:"id"`
+	Price float64 `json:"price"`
+}
+
+func (s *ArticleService) UpdateArticlesState(articleIDs []string, status ArticleStatus, token string) ([]ArticleUpdateResponse, error) {
+	url := fmt.Sprintf("%s/api/protected/articles/status", s.baseURL)
 	
-	// Build request matching the expected structure
 	request := StatusUpdateRequest{
 		ArticleIDs: articleIDs,
-		Status:     string(status),  // Convert ArticleStatus to string
+		Status:     string(status),
 	}
 
 	jsonData, err := json.Marshal(request)
 	if err != nil {
-		return fmt.Errorf("error marshaling request: %v", err)
+		return nil, fmt.Errorf("error marshaling request: %v", err)
 	}
 
 	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
-	req.Header.Set("Authorization", clerkToken)
+	req.Header.Set("Authorization", token)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error making request: %v", err)
+		return nil, fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	return nil
-} 
+	var articles []ArticleUpdateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&articles); err != nil {
+		return nil, fmt.Errorf("error decoding response: %v", err)
+	}
+
+	return articles, nil
+}
