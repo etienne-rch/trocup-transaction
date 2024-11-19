@@ -17,7 +17,11 @@ type CompleteTransactionRequest struct {
 }
 
 func CompleteTransaction(c *fiber.Ctx) error {
-    log.Printf("Starting CompleteTransaction handler with ID: %s", c.Params("id"))
+  
+	articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
+	if articleServiceBaseURL == "" {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
+	}
     
     var request CompleteTransactionRequest
     if err := c.BodyParser(&request); err != nil {
@@ -82,10 +86,6 @@ func CompleteTransaction(c *fiber.Ctx) error {
 
 		// If the transaction is refused, we must update the article state to available if it's a 1To1 transaction
 		if transaction.ArticleA.IsZero() {
-			articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
-			if articleServiceBaseURL == "" {
-				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
-			}
 			
 			token := c.Get("Authorization")
 			articleIDs := []string{transaction.ArticleB.Hex()}
@@ -108,10 +108,7 @@ func CompleteTransaction(c *fiber.Ctx) error {
         var articles []services.ArticleUpdateResponse
         var articlePriceA, articlePriceB float64
 
-        articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
-        if articleServiceBaseURL == "" {
-            return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
-        }
+      
 
         token := c.Get("Authorization")
         articleIDs := []string{transaction.ArticleB.Hex()}
@@ -163,6 +160,18 @@ func CompleteTransaction(c *fiber.Ctx) error {
         log.Printf("Service request: %s", string(jsonData))
 
         if err = services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest, token); err != nil {
+
+			// We roll back and mark the articles as available if the user data update fails
+			articles, err = services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
+				articleIDs,
+				services.ArticleStatusAvailable,
+				token,
+			)
+
+			if err != nil {
+				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update articles back to available"})
+			}
+
             return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user data"})
         }
     }
