@@ -94,3 +94,12 @@ func TransactionExists(userA, userB string, articleB primitive.ObjectID, article
 	count, err := config.TransactionCollection.CountDocuments(context.TODO(), filter)
 	return count > 0, err
 }
+
+func UpdateTransactionState(id primitive.ObjectID, state models.TransactionState) error {
+	_, err := config.TransactionCollection.UpdateOne(
+		context.TODO(),
+		bson.M{"_id": id},
+		bson.M{"$set": bson.M{"state": state}},
+	)
+	return err
+}

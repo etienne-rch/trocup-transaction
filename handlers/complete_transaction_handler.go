@@ -177,9 +177,8 @@ func CompleteTransaction(c *fiber.Ctx) error {
     }
 
     // Update transaction state
-    transaction.State = request.State
-    if err := services.UpdateTransaction(transaction.ID, transaction); err != nil {
-        return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update transaction"})
+    if err := services.UpdateTransactionState(transaction.ID, request.State); err != nil {
+        return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update transaction state"})
     }
 
     // Return appropriate response
