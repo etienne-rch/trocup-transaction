@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "encoding/json"
     "net/http"
     "os"
     "trocup-transaction/models"
@@ -8,6 +9,7 @@ import (
 
     "github.com/gofiber/fiber/v2"
     "go.mongodb.org/mongo-driver/bson/primitive"
+    "log"
 )
 
 type CompleteTransactionRequest struct {
@@ -15,11 +17,14 @@ type CompleteTransactionRequest struct {
 }
 
 func CompleteTransaction(c *fiber.Ctx) error {
-    // Parse and validate request body
+    log.Printf("Starting CompleteTransaction handler with ID: %s", c.Params("id"))
+    
     var request CompleteTransactionRequest
     if err := c.BodyParser(&request); err != nil {
+        log.Printf("Error parsing request body: %v", err)
         return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
     }
+    log.Printf("Request state: %s", request.State)
 
     // Validate state using the IsValid method
     if !request.State.IsValid() {
@@ -97,22 +102,26 @@ func CompleteTransaction(c *fiber.Ctx) error {
 
     // Only proceed with user/article updates if state is ACCEPTED
     if request.State == models.TransactionStateAccepted {
+        log.Printf("Processing ACCEPTED state transaction")
+        
+        // Only update articles if this is a 1-to-1 transaction
+        var articles []services.ArticleUpdateResponse
+        var articlePriceA, articlePriceB float64
+
         articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
         if articleServiceBaseURL == "" {
             return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
         }
 
         token := c.Get("Authorization")
-
-        // Collect article IDs
-        var articleIDs []string
-        articleIDs = append(articleIDs, transaction.ArticleB.Hex())
+        articleIDs := []string{transaction.ArticleB.Hex()}
+        
+        // Add ArticleA to the update request if it exists
         if !transaction.ArticleA.IsZero() {
             articleIDs = append(articleIDs, transaction.ArticleA.Hex())
         }
 
-        // Update articles and get their prices in one call
-        articles, err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
+        articles, err = services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
             articleIDs,
             services.ArticleStatusUnavailable,
             token,
@@ -121,13 +130,11 @@ func CompleteTransaction(c *fiber.Ctx) error {
             return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update articles"})
         }
 
-        // Extract prices and prepare user service request
-        var articlePriceA, articlePriceB float64
+        // Extract prices from the response
         for _, article := range articles {
             if article.ID == transaction.ArticleB.Hex() {
                 articlePriceB = article.Price
-            }
-            if !transaction.ArticleA.IsZero() && article.ID == transaction.ArticleA.Hex() {
+            } else if !transaction.ArticleA.IsZero() && article.ID == transaction.ArticleA.Hex() {
                 articlePriceA = article.Price
             }
         }
@@ -145,13 +152,17 @@ func CompleteTransaction(c *fiber.Ctx) error {
             ArticlePriceB: articlePriceB,
         }
 
-        // Only add ArticleA data if it exists (1-to-1 transaction)
-        if !transaction.ArticleA.IsZero() {
-            serviceRequest.ArticleA = transaction.ArticleA.Hex()
-            serviceRequest.ArticlePriceA = articlePriceA
+        // Only add ArticleA fields if it exists and we have its price
+        if !transaction.ArticleA.IsZero() && articlePriceA > 0 {
+            articleAHex := transaction.ArticleA.Hex()
+            serviceRequest.ArticleA = &articleAHex
+            serviceRequest.ArticlePriceA = &articlePriceA
         }
 
-        if err := services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest, token); err != nil {
+        jsonData, _ := json.Marshal(serviceRequest)
+        log.Printf("Service request: %s", string(jsonData))
+
+        if err = services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest, token); err != nil {
             return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user data"})
         }
     }

@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 )
 
 type UserService struct {
     baseURL string
+    origin  string
 }
 
 type ArticleOwnership struct {
@@ -20,9 +23,9 @@ type ArticleOwnership struct {
 type TransactionForUserRequest struct {
     UserA          string  `json:"userA"`
     UserB          string  `json:"userB"`
-    ArticleA       string  `json:"articleA,omitempty"`
+    ArticleA       *string  `json:"articleA,omitempty"`
     ArticleB       string  `json:"articleB"`
-    ArticlePriceA  float64 `json:"articlePriceA,omitempty"`
+    ArticlePriceA  *float64 `json:"articlePriceA,omitempty"`
     ArticlePriceB  float64 `json:"articlePriceB"`
 }
 
@@ -30,6 +33,7 @@ type TransactionForUserRequest struct {
 func GetUserService(baseURL string) *UserService {
     return &UserService{
         baseURL: baseURL,
+        origin:  os.Getenv("SERVICE_ORIGIN"),
     }
 }
 
@@ -40,18 +44,17 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token s
         return fmt.Errorf("error marshaling payload: %v", err)
     }
 
-    req, err := http.NewRequest(
-        http.MethodPatch,
-        fmt.Sprintf("%susers/transactions", s.baseURL),
-        bytes.NewBuffer(jsonData),
-    )
+    url := fmt.Sprintf("%susers/transactions", s.baseURL)
+    req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(jsonData))
     if err != nil {
         return fmt.Errorf("error creating request: %v", err)
     }
 
-    // Set headers
     req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+    req.Header.Set("Authorization", token)
+    if s.origin != "" {
+        req.Header.Set("Origin", s.origin)
+    }
 
     client := &http.Client{}
     response, err := client.Do(req)
@@ -61,7 +64,8 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token s
     defer response.Body.Close()
 
     if response.StatusCode != http.StatusOK {
-        return fmt.Errorf("user service returned status code: %d", response.StatusCode)
+        body, _ := io.ReadAll(response.Body)
+        return fmt.Errorf("user service returned status code: %d, body: %s", response.StatusCode, string(body))
     }
 
     return nil
