@@ -1,7 +1,7 @@
 package services
 
 import (
-  
+	"log"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -45,7 +45,10 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token s
         return fmt.Errorf("error marshaling payload: %v", err)
     }
 
-    url := fmt.Sprintf("%susers/transactions", s.baseURL)
+    url := fmt.Sprintf("%sapi/protected/users/transactions", s.baseURL)
+
+    log.Printf("🔥 URL: %s", url)
+
     req, err := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(jsonData))
     if err != nil {
         return fmt.Errorf("error creating request: %v", err)
@@ -59,6 +62,9 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token s
 
     client := &http.Client{}
     response, err := client.Do(req)
+
+    log.Printf("🔥 Response from user service: %v", response)
+
     if err != nil {
         return fmt.Errorf("error making request to user service: %v", err)
     }
@@ -75,6 +81,9 @@ func (s *UserService) UpdateUsersData(request TransactionForUserRequest, token s
 // HealthCheck verifies if the user service is available
 func (s *UserService) HealthCheck() bool {
     resp, err := http.Get(fmt.Sprintf("%sapi/health", s.baseURL))
+
+    log.Printf("🔥 Response from user service health check: %v", resp)
+
     if err != nil {
         return false
     }

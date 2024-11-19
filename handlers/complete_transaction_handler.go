@@ -1,7 +1,7 @@
 package handlers
 
 import (
-    "encoding/json"
+   
     "net/http"
     "os"
     "trocup-transaction/models"
@@ -156,9 +156,9 @@ func CompleteTransaction(c *fiber.Ctx) error {
             serviceRequest.ArticlePriceA = &articlePriceA
         }
 
-        jsonData, _ := json.Marshal(serviceRequest)
-        log.Printf("Service request: %s", string(jsonData))
+        log.Printf("🔥 Content to user service: %s", serviceRequest)
 
+		// Update user data
         if err = services.GetUserService(userServiceBaseURL).UpdateUsersData(serviceRequest, token); err != nil {
 
 			// We roll back and mark the articles as available if the user data update fails
