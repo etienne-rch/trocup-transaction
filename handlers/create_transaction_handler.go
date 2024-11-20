@@ -11,11 +11,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	
 )
 
 var validate = validator.New()
-
 
 // Article represents the article information in the request
 type Article struct {
@@ -25,12 +23,12 @@ type Article struct {
 
 // TransactionRequest represents the incoming request body
 type TransactionRequest struct {
-	UserA    string            `json:"userA"`
-	UserB    string            `json:"userB"`
-	ArticleB Article           `json:"articleB"`
-	ArticleA Article           `json:"articleA,omitempty"`
-	State    models.TransactionState  `json:"state" validate:"required"`
-	Address  models.Address    `json:"address,omitempty"`
+	UserA    string                  `json:"userA"`
+	UserB    string                  `json:"userB"`
+	ArticleB Article                 `json:"articleB"`
+	ArticleA Article                 `json:"articleA,omitempty"`
+	State    models.TransactionState `json:"state" validate:"required"`
+	Address  models.Address          `json:"address,omitempty"`
 }
 
 func CreatePreTransaction(c *fiber.Ctx) error {
@@ -53,20 +51,20 @@ func CreatePreTransaction(c *fiber.Ctx) error {
 	}
 
 	log.Printf("Request Body: UserA: %s, UserB: %s, ArticleB: {ID: %s}, State: %s",
-		request.UserA, 
-		request.UserB, 
-		request.ArticleB.ID, 
+		request.UserA,
+		request.UserB,
+		request.ArticleB.ID,
 		request.State)
 
 	if request.ArticleA.ID != "" {
-		log.Printf("Optional ArticleA: {ID: %s, Price: %.2f}", 
-			request.ArticleA.ID, 
+		log.Printf("Optional ArticleA: {ID: %s, Price: %.2f}",
+			request.ArticleA.ID,
 			request.ArticleA.Price)
 	}
 
-	if request.Address.Street != "" || request.Address.City != "" || request.Address.Label != "" || 
-	   request.Address.Postcode != "" || request.Address.Citycode != "" || 
-	   len(request.Address.GeoPoints.Coordinates) > 0 {
+	if request.Address.Street != "" || request.Address.City != "" || request.Address.Label != "" ||
+		request.Address.Postcode != "" || request.Address.Citycode != "" ||
+		len(request.Address.GeoPoints.Coordinates) > 0 {
 		log.Printf("Optional Address: Street: %s, City: %s, Label: %s, Postcode: %s, Citycode: %s, GeoPoints: %v",
 			request.Address.Street,
 			request.Address.City,
@@ -127,9 +125,9 @@ func CreatePreTransaction(c *fiber.Ctx) error {
 	}
 
 	// Check if address has any meaningful data
-	if request.Address.Street != "" || request.Address.City != "" || request.Address.Label != "" || 
-	   request.Address.Postcode != "" || request.Address.Citycode != "" || 
-	   len(request.Address.GeoPoints.Coordinates) > 0 {
+	if request.Address.Street != "" || request.Address.City != "" || request.Address.Label != "" ||
+		request.Address.Postcode != "" || request.Address.Citycode != "" ||
+		len(request.Address.GeoPoints.Coordinates) > 0 {
 		transaction.Delivery = &models.Delivery{
 			Address: request.Address,
 		}
@@ -141,10 +139,9 @@ func CreatePreTransaction(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ArticleA ID format"})
 		}
-		transaction.ArticleA = articleAID
+		transaction.ArticleA = &articleAID
 	}
 
-	
 	// Save to transaction database
 	if err := services.CreateTransaction(&transaction); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create transaction"})

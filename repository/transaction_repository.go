@@ -82,8 +82,8 @@ func GetAllTransactionsByUserID(userID string) ([]*models.Transaction, error) {
 
 func TransactionExists(userA, userB string, articleB primitive.ObjectID, articleA primitive.ObjectID) (bool, error) {
 	filter := bson.M{
-		"userA": userA,
-		"userB": userB,
+		"userA":    userA,
+		"userB":    userB,
 		"articleB": articleB,
 	}
 
