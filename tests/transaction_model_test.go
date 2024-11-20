@@ -12,18 +12,17 @@ func TestTransaction(t *testing.T) {
 
 	delivery := models.Delivery{
 		ID:            primitive.NewObjectID(),
-		Type:          "standard",
 		PackageWeight: 1000,
 		Cost:          10,
 		QrCodeUrl:     "https://example.com/qrcode",
 	}
 
 	transaction := models.Transaction{
-		ID:            primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
-		UserA:      id,                      // Utilise un string pour Receiver
-		ArticleB:  primitive.NewObjectID(),
-		UserB:     id, // Utilise un string pour Sender
-		Delivery:  delivery,
+		ID:       primitive.NewObjectID(), // L'ID de la transaction reste un ObjectID
+		UserA:    id,                      // Utilise un string pour Receiver
+		ArticleB: primitive.NewObjectID(),
+		UserB:    id, // Utilise un string pour Sender
+		Delivery: &delivery,
 	}
 
 	// Tests pour vérifier les champs de la transaction
@@ -35,9 +34,6 @@ func TestTransaction(t *testing.T) {
 	}
 	if transaction.Delivery.ID != delivery.ID {
 		t.Errorf("expected Delivery ID to be %v, got %v", delivery.ID, transaction.Delivery.ID)
-	}
-	if transaction.Delivery.Type != "standard" {
-		t.Errorf("expected Delivery Type to be 'standard', got %s", transaction.Delivery.Type)
 	}
 	if transaction.Delivery.PackageWeight != 1000 {
 		t.Errorf("expected Package Weight to be 1000, got %d", transaction.Delivery.PackageWeight)

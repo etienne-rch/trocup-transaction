@@ -22,12 +22,11 @@ func TestUpdateTransaction(t *testing.T) {
 	// Créer une transaction pour les tests
 	id := primitive.NewObjectID()
 	transaction := models.Transaction{
-		ID:            id,
-		UserA:      "receiverUserId456", // Utilise un string pour Receiver
-		ArticleB:  primitive.NewObjectID(),
-		UserB:     "senderUserId123", // Utilise un string pour Sender
-		Delivery: models.Delivery{
-			Type:          "standard",
+		ID:       id,
+		UserA:    "receiverUserId456", // Utilise un string pour Receiver
+		ArticleB: primitive.NewObjectID(),
+		UserB:    "senderUserId123", // Utilise un string pour Sender
+		Delivery: &models.Delivery{
 			PackageWeight: 2,
 			Cost:          100,
 			QrCodeUrl:     "http://example.com/qrcode",

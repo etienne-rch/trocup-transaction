@@ -25,12 +25,10 @@ func TestGetAllTransactionsUser(t *testing.T) {
 	transaction1 := models.Transaction{
 		UserA:    "userA123",
 		UserB:    "userB123",
-		ArticleA: primitive.NewObjectID(),
+		ArticleA: &primitive.ObjectID{},
 		ArticleB: primitive.NewObjectID(),
-		Delivery: models.Delivery{
-			Type:          "standard",
+		Delivery: &models.Delivery{
 			PackageWeight: 2,
-			Sent:          time.Now(),
 			Cost:          100,
 			QrCodeUrl:     "http://example.com/qrcode1",
 		},
@@ -39,26 +37,22 @@ func TestGetAllTransactionsUser(t *testing.T) {
 	transaction2 := models.Transaction{
 		UserA:    "userA456",
 		UserB:    "userB456",
-		ArticleA: primitive.NewObjectID(),
+		ArticleA: &primitive.ObjectID{},
 		ArticleB: primitive.NewObjectID(),
-		Delivery: models.Delivery{
-			Type:          "express",
+		Delivery: &models.Delivery{
 			PackageWeight: 1,
-			Sent:          time.Now(),
 			Cost:          200,
 			QrCodeUrl:     "http://example.com/qrcode2",
 		},
 		CreatedAt: time.Now(),
 	}
 	transaction3 := models.Transaction{
-		UserA:    "userA123", // Même UserA que transaction1
+		UserA:    "userA123",
 		UserB:    "userB789",
-		ArticleA: primitive.NewObjectID(),
+		ArticleA: &primitive.ObjectID{},
 		ArticleB: primitive.NewObjectID(),
-		Delivery: models.Delivery{
-			Type:          "standard",
+		Delivery: &models.Delivery{
 			PackageWeight: 3,
-			Sent:          time.Now(),
 			Cost:          150,
 			QrCodeUrl:     "http://example.com/qrcode3",
 		},

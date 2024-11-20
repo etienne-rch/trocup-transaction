@@ -22,25 +22,23 @@ func TestGetAllTransactions(t *testing.T) {
 
 	// Créer deux transactions avec des strings pour UserA et UserB
 	transaction1 := models.Transaction{
-		UserA:      "receiverUserId456", // Utilise un string pour Receiver
-		ArticleB:  primitive.NewObjectID(),
-		UserB:     "senderUserId123", // Utilise un string pour Sender
-		Delivery: models.Delivery{
-			Type:          "standard",
+		UserA:    "receiverUserId456", // Utilise un string pour Receiver
+		ArticleB: primitive.NewObjectID(),
+		UserB:    "senderUserId123", // Utilise un string pour Sender
+		Delivery: &models.Delivery{
 			PackageWeight: 2,
 			Cost:          100,
-			QrCodeUrl:     "http://example.com/qrcode",
+			QrCodeUrl:     "http://example.com/qrcode1",
 		},
 	}
 	transaction2 := models.Transaction{
-		UserA:      "receiverUserId789", // Utilise un string pour Receiver
-		ArticleB:  primitive.NewObjectID(),
-		UserB:     "senderUserId456", // Utilise un string pour Sender
-		Delivery: models.Delivery{
-			Type:          "express",
-			PackageWeight: 1,
-			Cost:          200,
-			QrCodeUrl:     "http://example.com/qrcode2",
+		UserA:    "receiverUserId789", // Utilise un string pour Receiver
+		ArticleB: primitive.NewObjectID(),
+		UserB:    "senderUserId456", // Utilise un string pour Sender
+		Delivery: &models.Delivery{
+			PackageWeight: 2,
+			Cost:          100,
+			QrCodeUrl:     "http://example.com/qrcode1",
 		},
 	}
 
