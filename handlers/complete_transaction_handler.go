@@ -83,8 +83,8 @@ func CompleteTransaction(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Transaction already completed"})
 	}
 
-	// Check if the transaction is already refused
-	if transaction.State == models.TransactionStateRefused {
+	// If the transaction is refused and this is a 1-to-1 transaction, we need to update the article states
+	if transaction.State == models.TransactionStateRefused && transaction.ArticleA != nil {
 		log.Printf("Transaction is refused, updating article states")
 
 		articleIDs := []string{transaction.ArticleB.Hex()}
@@ -105,7 +105,7 @@ func CompleteTransaction(c *fiber.Ctx) error {
 
 	// Only proceed with user/article updates if state is ACCEPTED
 	if request.State == models.TransactionStateAccepted {
-		log.Printf("Processing ACCEPTED state transaction")
+		log.Printf("✅ Processing ACCEPTED state transaction")
 
 		// Only update articles if this is a 1-to-1 transaction
 		var articles []services.ArticleUpdateResponse
