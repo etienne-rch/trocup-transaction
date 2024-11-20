@@ -19,6 +19,8 @@ type CompleteTransactionRequest struct {
 
 func CompleteTransaction(c *fiber.Ctx) error {
 
+	token := c.Get("Authorization")
+
 	articleServiceBaseURL := os.Getenv("ARTICLE_SERVICE_URL")
 	if articleServiceBaseURL == "" {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Article service base URL not set"})
@@ -83,21 +85,21 @@ func CompleteTransaction(c *fiber.Ctx) error {
 
 	// Check if the transaction is already refused
 	if transaction.State == models.TransactionStateRefused {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Transaction already refused"})
+		log.Printf("Transaction is refused, updating article states")
 
-		// If the transaction is refused, we must update the article state to available if it's a 1To1 transaction
-		if transaction.ArticleA.IsZero() {
+		articleIDs := []string{transaction.ArticleB.Hex()}
 
-			token := c.Get("Authorization")
-			articleIDs := []string{transaction.ArticleB.Hex()}
-			_, err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
-				articleIDs,
-				services.ArticleStatusAvailable,
-				token,
-			)
-			if err != nil {
-				return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update article status"})
-			}
+		if transaction.ArticleA != nil {
+			articleIDs = append(articleIDs, transaction.ArticleA.Hex())
+		}
+
+		_, err := services.GetArticleService(articleServiceBaseURL).UpdateArticlesState(
+			articleIDs,
+			services.ArticleStatusAvailable,
+			token,
+		)
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update article status"})
 		}
 	}
 
@@ -109,11 +111,10 @@ func CompleteTransaction(c *fiber.Ctx) error {
 		var articles []services.ArticleUpdateResponse
 		var articlePriceA, articlePriceB float64
 
-		token := c.Get("Authorization")
 		articleIDs := []string{transaction.ArticleB.Hex()}
 
 		// Add ArticleA to the update request if it exists
-		if !transaction.ArticleA.IsZero() {
+		if transaction.ArticleA != nil {
 			articleIDs = append(articleIDs, transaction.ArticleA.Hex())
 		}
 
@@ -130,7 +131,7 @@ func CompleteTransaction(c *fiber.Ctx) error {
 		for _, article := range articles {
 			if article.ID == transaction.ArticleB.Hex() {
 				articlePriceB = article.Price
-			} else if !transaction.ArticleA.IsZero() && article.ID == transaction.ArticleA.Hex() {
+			} else if transaction.ArticleA != nil && article.ID == transaction.ArticleA.Hex() {
 				articlePriceA = article.Price
 			}
 		}
@@ -149,7 +150,7 @@ func CompleteTransaction(c *fiber.Ctx) error {
 		}
 
 		// Only add ArticleA fields if it exists and we have its price
-		if !transaction.ArticleA.IsZero() && articlePriceA > 0 {
+		if transaction.ArticleA != nil && articlePriceA > 0 {
 			articleAHex := transaction.ArticleA.Hex()
 			serviceRequest.ArticleA = &articleAHex
 			serviceRequest.ArticlePriceA = &articlePriceA
