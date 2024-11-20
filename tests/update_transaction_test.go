@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 	"trocup-transaction/config"
 	"trocup-transaction/handlers"
 	"trocup-transaction/models"
@@ -24,13 +23,11 @@ func TestUpdateTransaction(t *testing.T) {
 	id := primitive.NewObjectID()
 	transaction := models.Transaction{
 		ID:       id,
-		UserB:    "receiverUserId456", // Utilise un string pour UserB
-		ArticleA: primitive.NewObjectID(),
-		UserA:    "senderUserId123", // Utilise un string pour UserA
-		Delivery: models.Delivery{
-			Type:          "standard",
+		UserA:    "receiverUserId456", // Utilise un string pour Receiver
+		ArticleB: primitive.NewObjectID(),
+		UserB:    "senderUserId123", // Utilise un string pour Sender
+		Delivery: &models.Delivery{
 			PackageWeight: 2,
-			Sent:          time.Now(),
 			Cost:          100,
 			QrCodeUrl:     "http://example.com/qrcode",
 		},
@@ -44,7 +41,7 @@ func TestUpdateTransaction(t *testing.T) {
 
 	// Simuler l'ajout du middleware ClerkAuthMiddleware
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("clerkUserId", transaction.UserA) // Simuler l'utilisateur connecté avec un string (UserA)
+		c.Locals("clerkUserId", transaction.UserB) // Simuler l'utilisateur connecté avec un string (Sender)
 		return c.Next()
 	})
 

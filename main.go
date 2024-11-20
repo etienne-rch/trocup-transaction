@@ -30,10 +30,17 @@ func main() {
 		AppName: "Trocup Transaction Microservice",
 	})
 
+	// Get allowed origins from environment variable
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+
 	// CORS activation for all routes
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",                                // Enable access from all domains
-		AllowMethods: "GET,POST,HEAD,PUT,DELETE,OPTIONS", // Allowed HTTP methods
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		ExposeHeaders:    "Content-Length",
+		AllowCredentials: true,
+		MaxAge:           300,
 	}))
 
 	// Initialize MongoDB
