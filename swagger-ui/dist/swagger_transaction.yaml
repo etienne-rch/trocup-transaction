@@ -1,0 +1,299 @@
+openapi: 3.0.0
+info:
+  title: Trocup Transaction API
+  description: API pour gérer les transactions sur Trocup
+  version: 1.0.0
+servers:
+  - url: http://localhost:5003
+    description: Serveur de développement local
+
+paths:
+  /api/health:
+    get:
+      summary: Vérification de l'état du service
+      description: Route simple pour vérifier si le service est actif.
+      responses:
+        '200':
+          description: Service actif
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Service is up and running!"
+
+  /api/protected/transactions:
+    post:
+      summary: Créer une pré-transaction
+      description: Crée une transaction entre deux utilisateurs en fonction des articles échangés.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Pré-transaction créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Requête invalide
+        '409':
+          description: Transaction déjà existante
+        '500':
+          description: Erreur serveur
+
+    get:
+      summary: Récupérer toutes les transactions
+      description: Permet de récupérer toutes les transactions.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Transactions récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /api/protected/transactions/{id}:
+    get:
+      summary: Récupérer une transaction par son ID
+      description: Permet de récupérer les détails d'une transaction spécifique.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identifiant unique de la transaction.
+      responses:
+        '200':
+          description: Transaction récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Transaction introuvable
+
+    patch:
+      summary: Compléter ou mettre à jour l'état d'une transaction
+      description: Permet de mettre à jour l'état d'une transaction existante.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identifiant unique de la transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteTransactionRequest'
+      responses:
+        '200':
+          description: Transaction mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Requête invalide
+        '404':
+          description: Transaction introuvable
+
+    put:
+      summary: Mettre à jour une transaction
+      description: Permet de modifier les détails d'une transaction.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identifiant unique de la transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+      responses:
+        '200':
+          description: Transaction mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Requête invalide
+        '404':
+          description: Transaction introuvable
+
+    delete:
+      summary: Supprimer une transaction
+      description: Permet de supprimer une transaction spécifique.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identifiant unique de la transaction.
+      responses:
+        '204':
+          description: Transaction supprimée avec succès
+        '404':
+          description: Transaction introuvable
+
+  /api/protected/transactions/users/{id}:
+    get:
+      summary: Récupérer les transactions d'un utilisateur
+      description: Permet de récupérer toutes les transactions associées à un utilisateur spécifique.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identifiant unique de l'utilisateur.
+      responses:
+        '200':
+          description: Transactions récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "63bfe9408d5894004d4b827c"
+        userA:
+          type: string
+          example: "user123"
+        userB:
+          type: string
+          example: "user456"
+        articleA:
+          type: string
+          example: "article123"
+        articleB:
+          type: string
+          example: "article456"
+        state:
+          type: string
+          example: "pending"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-11-20T14:25:23Z"
+
+    TransactionRequest:
+      type: object
+      properties:
+        userA:
+          type: string
+          description: Identifiant de l'utilisateur A (émetteur).
+        userB:
+          type: string
+          description: Identifiant de l'utilisateur B (récepteur).
+        articleA:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Identifiant de l'article A.
+            price:
+              type: number
+              description: Prix de l'article A.
+        articleB:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Identifiant de l'article B.
+            price:
+              type: number
+              description: Prix de l'article B.
+        state:
+          type: string
+          enum: ["pending", "accepted", "refused", "cancelled", "completed"]
+        address:
+          $ref: '#/components/schemas/Address'
+
+    CompleteTransactionRequest:
+      type: object
+      properties:
+        state:
+          type: string
+          enum: ["pending", "accepted", "refused", "cancelled", "completed"]
+
+    TransactionUpdateRequest:
+      type: object
+      properties:
+        userA:
+          type: string
+        userB:
+          type: string
+        state:
+          type: string
+          enum: ["pending", "accepted", "refused", "cancelled", "completed"]
+
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        label:
+          type: string
+        postcode:
+          type: string
+        citycode:
+          type: string
+        geo_points:
+          type: object
+          properties:
+            coordinates:
+              type: array
+              items:
+                type: number

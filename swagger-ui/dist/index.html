@@ -12,8 +12,15 @@
 
   <body>
     <div id="swagger-ui"></div>
-    <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
-    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
-    <script src="./swagger-initializer.js" charset="UTF-8"> </script>
+    <script src="./swagger-ui-bundle.js" charset="UTF-8"></script>
+    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+
+    <!-- Configuration de Swagger UI -->
+    <script>
+      const ui = SwaggerUIBundle({
+          url: "./swagger_transaction.yaml", // Chemin vers votre fichier OpenAPI
+          dom_id: '#swagger-ui', // ID de l'élément HTML où Swagger UI sera rendu
+      });
+    </script>
   </body>
 </html>
