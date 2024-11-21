@@ -1,0 +1,169 @@
+openapi: 3.0.0
+info:
+  title: Trocup Transaction API
+  description: API pour gérer les transactions dans Trocup
+  version: 1.0.0
+servers:
+  - url: "{baseUrl}"
+    description: URL de base pour différents environnements
+    variables:
+      baseUrl:
+        default: http://localhost:5003
+        description: URL par défaut pour le serveur de développement local
+
+paths:
+  /transactions:
+    get:
+      summary: Récupérer toutes les transactions
+      description: Renvoie une liste de toutes les transactions disponibles.
+      security:
+        - BearerAuth: []  # Nécessite le JWT
+      responses:
+        '200':
+          description: Liste des transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+    post:
+      summary: Créer une nouvelle transaction
+      description: Ajoute une nouvelle transaction dans la base de données.
+      security:
+        - BearerAuth: []  # Nécessite le JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionInput'
+      responses:
+        '201':
+          description: Transaction créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/{id}:
+    get:
+      summary: Récupérer une transaction par ID
+      description: Renvoie une transaction spécifique par son ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la transaction à récupérer
+          schema:
+            type: string
+      security:
+        - BearerAuth: []  # Nécessite le JWT
+      responses:
+        '200':
+          description: Transaction trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Transaction non trouvée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Transaction not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # Spécifie que c'est un JWT
+
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6534f51b7fbf00cf08d4b789
+        version:
+          type: integer
+          example: 1
+        receiver:
+          type: string
+          example: 6034f51b7fbf00cf08d4b123
+        article:
+          type: string
+          example: 6134f51b7fbf00cf08d4b456
+        sender:
+          type: string
+          example: 6234f51b7fbf00cf08d4b789
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+
+    TransactionInput:
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 1
+        receiver:
+          type: string
+          example: 6034f51b7fbf00cf08d4b123
+        article:
+          type: string
+          example: 6134f51b7fbf00cf08d4b456
+        sender:
+          type: string
+          example: 6234f51b7fbf00cf08d4b789
+        delivery:
+          $ref: '#/components/schemas/DeliveryInput'
+
+    Delivery:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6534f51b7fbf00cf08d4b789
+        type:
+          type: string
+          example: "Express"
+        packageWeight:
+          type: integer
+          example: 500
+        sent:
+          type: string
+          format: date-time
+          example: 2023-10-18T12:00:00Z
+        cost:
+          type: integer
+          example: 20
+        qrCodeUrl:
+          type: string
+          example: "https://example.com/qrcode.png"
+
+    DeliveryInput:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "Express"
+        packageWeight:
+          type: integer
+          example: 500
+        sent:
+          type: string
+          format: date-time
+          example: 2023-10-18T12:00:00Z
+        cost:
+          type: integer
+          example: 20
+        qrCodeUrl:
+          type: string
+          example: "https://example.com/qrcode.png"
