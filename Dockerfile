@@ -1,20 +1,53 @@
-FROM golang:1.18-alpine
+# Build stage
+FROM golang:1.22-alpine AS builder
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers go.mod et go.sum et installer les dépendances
+# Install build dependencies
+RUN apk add --no-cache git
+
+# Copy only the dependency files first
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copier le reste de l'application
+# Copy the rest of the application
 COPY . .
 
-# Construire l'application
-RUN go build -o app
+# Build the application with the correct flags for deployment architecture
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app
 
-# Exposer le port sur lequel l'application écoute
+# Final stage
+FROM alpine:latest
+
+# Set constants for user/group IDs and name
+ENV APP_USER=svc_nonroot
+ENV APP_UID=10001
+ENV APP_GID=10001
+
+# Update Alpine and add necessary packages
+RUN apk --no-cache upgrade && \
+    apk --no-cache add ca-certificates wget
+
+WORKDIR /app
+
+# Copy the binary from builder
+COPY --from=builder /app/app .
+
+# Create user with fixed name and UID
+RUN addgroup -S -g ${APP_GID} appgroup && \
+    adduser -S -g appgroup -u ${APP_UID} ${APP_USER} && \
+    # Set proper permissions
+    chown -R ${APP_UID}:${APP_GID} /app && \
+    chmod -R 550 /app && \
+    chmod 500 /app/app
+
+# Use the numerical UID/GID instead of username
+USER ${APP_UID}:${APP_GID}
+
 EXPOSE 5003
 
-# Définir la commande par défaut pour exécuter l'application
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5003/api/health || exit 1
+
 CMD ["./app"]
